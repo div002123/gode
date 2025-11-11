@@ -98,6 +98,9 @@ pub struct Config {
     /// Info needed to make an API request to the model.
     pub model_provider: ModelProviderInfo,
 
+    /// API key for authentication. Read from config.toml or environment variables.
+    pub api_key: Option<String>,
+
     /// Approval policy for executing commands.
     pub approval_policy: AskForApproval,
 
@@ -513,6 +516,10 @@ pub struct ConfigToml {
 
     /// Provider to use from the model_providers map.
     pub model_provider: Option<String>,
+
+    /// API key for authentication. Used to authenticate with the model provider.
+    /// If set, this will be used to create the CodexAuth for API requests.
+    pub api_key: Option<String>,
 
     /// Size of the context window for the model, in tokens.
     pub model_context_window: Option<i64>,
@@ -1092,6 +1099,7 @@ impl Config {
             model_auto_compact_token_limit,
             model_provider_id,
             model_provider,
+            api_key: cfg.api_key.clone(),
             cwd: resolved_cwd,
             approval_policy,
             sandbox_policy,

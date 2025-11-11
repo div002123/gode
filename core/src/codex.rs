@@ -2513,7 +2513,7 @@ mod tests {
         let config = Arc::new(config);
         let conversation_id = ConversationId::default();
         let otel_event_manager = otel_event_manager(conversation_id, config.as_ref());
-        let auth = CodexAuth::from_env();
+        let auth = CodexAuth::from_config(config.api_key.clone());
 
         let session_configuration = SessionConfiguration {
             provider: config.model_provider.clone(),
@@ -2585,7 +2585,7 @@ mod tests {
         let config = Arc::new(config);
         let conversation_id = ConversationId::default();
         let otel_event_manager = otel_event_manager(conversation_id, config.as_ref());
-        let auth = CodexAuth::from_env();
+        let auth = CodexAuth::from_config(config.api_key.clone());
 
         let session_configuration = SessionConfiguration {
             provider: config.model_provider.clone(),
