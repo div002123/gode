@@ -10,7 +10,7 @@
 flowchart TD
     Start[接收命令参数] --> DetectFormat{检测调用格式}
 
-    DetectFormat -->|apply_patch &lt;patch&gt;| DirectInvocation[直接调用]
+    DetectFormat -->|"apply_patch <patch>"| DirectInvocation[直接调用]
     DetectFormat -->|bash -lc heredoc| HeredocInvocation[Heredoc 调用]
     DetectFormat -->|其他| NotApplyPatch[非补丁命令]
 
@@ -115,8 +115,8 @@ flowchart TD
 
     QueryAST --> MatchPattern{匹配模式}
 
-    MatchPattern -->|apply_patch &lt;&lt;'EOF'...| DirectPattern[直接模式]
-    MatchPattern -->|cd path && apply_patch &lt;&lt;'EOF'...| CdPattern[cd + 补丁模式]
+    MatchPattern -->|"apply_patch <<'EOF'..."| DirectPattern[直接模式]
+    MatchPattern -->|"cd path && apply_patch <<'EOF'..."| CdPattern[cd + 补丁模式]
     MatchPattern -->|不匹配| NotApplyPatchCommand[非 apply_patch 命令]
 
     DirectPattern --> ExtractHeredoc[提取 heredoc 正文]
