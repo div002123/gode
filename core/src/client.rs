@@ -7,7 +7,6 @@ use std::time::Duration;
 use bytes::Bytes;
 use chrono::DateTime;
 use chrono::Utc;
-use codex_app_server_protocol::AuthMode;
 use codex_otel::otel_event_manager::OtelEventManager;
 use codex_protocol::ConversationId;
 use codex_protocol::config_types::ReasoningEffort as ReasoningEffortConfig;
@@ -30,8 +29,6 @@ use tracing::trace;
 use tracing::warn;
 
 use crate::AuthManager;
-use crate::auth::CodexAuth;
-use crate::auth::RefreshTokenError;
 use crate::chat_completions::AggregateStreamExt;
 use crate::chat_completions::stream_chat_completions;
 use crate::client_common::Prompt;
@@ -326,12 +323,6 @@ impl ModelClient {
             .header(reqwest::header::ACCEPT, "text/event-stream")
             .json(payload_json);
 
-        if let Some(auth) = auth.as_ref()
-            && auth.mode == AuthMode::ChatGPT
-            && let Some(account_id) = auth.get_account_id()
-        {
-            req_builder = req_builder.header("chatgpt-account-id", account_id);
-        }
 
         let res = self
             .otel_event_manager
@@ -386,23 +377,6 @@ impl ModelClient {
                     .and_then(|s| s.parse::<u64>().ok());
                 let retry_after = retry_after_secs.map(|s| Duration::from_millis(s * 1_000));
 
-                if status == StatusCode::UNAUTHORIZED
-                    && let Some(manager) = auth_manager.as_ref()
-                    && let Some(auth) = auth.as_ref()
-                    && auth.mode == AuthMode::ChatGPT
-                    && let Err(err) = manager.refresh_token().await
-                {
-                    let stream_error = match err {
-                        RefreshTokenError::Permanent(failed) => {
-                            StreamAttemptError::Fatal(CodexErr::RefreshTokenFailed(failed))
-                        }
-                        RefreshTokenError::Transient(other) => {
-                            StreamAttemptError::RetryableTransportError(CodexErr::Io(other))
-                        }
-                    };
-                    return Err(stream_error);
-                }
-
                 // The OpenAI Responses endpoint returns structured JSON bodies even for 4xx/5xx
                 // errors. When we bubble early with only the HTTP status the caller sees an opaque
                 // "unexpected status 400 Bad Request" which makes debugging nearly impossible.
@@ -433,9 +407,7 @@ impl ModelClient {
                             // Prefer the plan_type provided in the error message if present
                             // because it's more up to date than the one encoded in the auth
                             // token.
-                            let plan_type = error
-                                .plan_type
-                                .or_else(|| auth.as_ref().and_then(CodexAuth::get_plan_type));
+                            let plan_type = error.plan_type;
                             let resets_at = error
                                 .resets_at
                                 .and_then(|seconds| DateTime::<Utc>::from_timestamp(seconds, 0));
@@ -1068,7 +1040,7 @@ mod tests {
             "test",
             None,
             Some("test@test.com".to_string()),
-            Some(AuthMode::ChatGPT),
+            Some(AuthMode::ApiKey),
             false,
             "test".to_string(),
         )

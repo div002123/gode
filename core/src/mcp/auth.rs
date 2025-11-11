@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use anyhow::Result;
 use codex_protocol::protocol::McpAuthStatus;
 use codex_rmcp_client::OAuthCredentialsStoreMode;
-use codex_rmcp_client::determine_streamable_http_auth_status;
 use futures::future::join_all;
 use tracing::warn;
 
@@ -46,27 +45,13 @@ where
 }
 
 async fn compute_auth_status(
-    server_name: &str,
+    _server_name: &str,
     config: &McpServerConfig,
-    store_mode: OAuthCredentialsStoreMode,
+    _store_mode: OAuthCredentialsStoreMode,
 ) -> Result<McpAuthStatus> {
+    // OAuth is no longer supported; all auth is handled via API keys only
     match &config.transport {
         McpServerTransportConfig::Stdio { .. } => Ok(McpAuthStatus::Unsupported),
-        McpServerTransportConfig::StreamableHttp {
-            url,
-            bearer_token_env_var,
-            http_headers,
-            env_http_headers,
-        } => {
-            determine_streamable_http_auth_status(
-                server_name,
-                url,
-                bearer_token_env_var.as_deref(),
-                http_headers.clone(),
-                env_http_headers.clone(),
-                store_mode,
-            )
-            .await
-        }
+        McpServerTransportConfig::StreamableHttp { .. } => Ok(McpAuthStatus::Unsupported),
     }
 }
