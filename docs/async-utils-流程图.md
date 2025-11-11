@@ -44,7 +44,7 @@ sequenceDiagram
     alt Token 先触发
         Token-->>Select: 取消信号
         Select-->>Caller: Err(Cancelled)
-        Note over Future: Future 可能继续执行<br/>但结果被丢弃
+        Note over Future: Future 可能继续执行但结果被丢弃
     else Future 先完成
         Future-->>Select: 结果
         Select-->>Caller: Ok(结果)
@@ -85,9 +85,9 @@ flowchart TD
     Start[主任务] --> CreateParentToken[创建父级令牌]
     CreateParentToken --> SpawnMultiple[启动多个子任务]
 
-    SpawnMultiple --> Task1[子任务 1<br/>token.clone()]
-    SpawnMultiple --> Task2[子任务 2<br/>token.clone()]
-    SpawnMultiple --> Task3[子任务 3<br/>token.clone()]
+    SpawnMultiple --> Task1["子任务 1 (token.clone())"]
+    SpawnMultiple --> Task2["子任务 2 (token.clone())"]
+    SpawnMultiple --> Task3["子任务 3 (token.clone())"]
 
     Task1 --> Wrap1[or_cancel 包装]
     Task2 --> Wrap2[or_cancel 包装]
