@@ -15,7 +15,7 @@ use codex_protocol::protocol::Submission;
 use codex_protocol::user_input::UserInput;
 use tokio_util::sync::CancellationToken;
 
-use crate::AuthManager;
+use crate::CodexAuth;
 use crate::codex::Codex;
 use crate::codex::CodexSpawnOk;
 use crate::codex::SUBMISSION_CHANNEL_CAPACITY;
@@ -32,7 +32,7 @@ use codex_protocol::protocol::InitialHistory;
 /// The returned `ops_tx` allows the caller to submit additional `Op`s to the sub-agent.
 pub(crate) async fn run_codex_conversation_interactive(
     config: Config,
-    auth_manager: Arc<AuthManager>,
+    auth: Option<CodexAuth>,
     parent_session: Arc<Session>,
     parent_ctx: Arc<TurnContext>,
     cancel_token: CancellationToken,
@@ -43,7 +43,7 @@ pub(crate) async fn run_codex_conversation_interactive(
 
     let CodexSpawnOk { codex, .. } = Codex::spawn(
         config,
-        auth_manager,
+        auth,
         initial_history.unwrap_or(InitialHistory::New),
         SessionSource::SubAgent(SubAgentSource::Review),
     )
@@ -89,7 +89,7 @@ pub(crate) async fn run_codex_conversation_interactive(
 /// Internally calls the interactive variant, then immediately submits the provided input.
 pub(crate) async fn run_codex_conversation_one_shot(
     config: Config,
-    auth_manager: Arc<AuthManager>,
+    auth: Option<CodexAuth>,
     input: Vec<UserInput>,
     parent_session: Arc<Session>,
     parent_ctx: Arc<TurnContext>,
@@ -101,7 +101,7 @@ pub(crate) async fn run_codex_conversation_one_shot(
     let child_cancel = cancel_token.child_token();
     let io = run_codex_conversation_interactive(
         config,
-        auth_manager,
+        auth,
         parent_session,
         parent_ctx,
         child_cancel.clone(),

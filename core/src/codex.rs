@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
 
-use crate::AuthManager;
+use crate::CodexAuth;
 use crate::client_common::REVIEW_PROMPT;
 use crate::features::Feature;
 use crate::function_tool::FunctionCallError;
@@ -156,7 +156,7 @@ impl Codex {
     /// Spawn a new [`Codex`] and initialize the session.
     pub async fn spawn(
         config: Config,
-        auth_manager: Arc<AuthManager>,
+        auth: Option<CodexAuth>,
         conversation_history: InitialHistory,
         session_source: SessionSource,
     ) -> CodexResult<CodexSpawnOk> {
@@ -189,7 +189,7 @@ impl Codex {
         let session = Session::new(
             session_configuration,
             config.clone(),
-            auth_manager.clone(),
+            auth,
             tx_event.clone(),
             conversation_history,
             session_source_clone,
@@ -379,7 +379,7 @@ pub(crate) struct SessionSettingsUpdate {
 
 impl Session {
     fn make_turn_context(
-        auth_manager: Option<Arc<AuthManager>>,
+        auth: Option<CodexAuth>,
         otel_event_manager: &OtelEventManager,
         provider: ModelProviderInfo,
         session_configuration: &SessionConfiguration,
@@ -405,7 +405,7 @@ impl Session {
 
         let client = ModelClient::new(
             Arc::new(per_turn_config),
-            auth_manager,
+            auth,
             otel_event_manager,
             provider,
             session_configuration.model_reasoning_effort,
@@ -440,7 +440,7 @@ impl Session {
     async fn new(
         session_configuration: SessionConfiguration,
         config: Arc<Config>,
-        auth_manager: Arc<AuthManager>,
+        auth: Option<CodexAuth>,
         tx_event: Sender<Event>,
         initial_history: InitialHistory,
         session_source: SessionSource,
@@ -568,7 +568,7 @@ impl Session {
             config.model_family.slug.as_str(),
             None,
             None,
-            auth_manager.auth().map(|a| a.mode),
+            auth.as_ref().map(|a| a.mode),
             config.otel.log_user_prompt,
             terminal::user_agent(),
         );
@@ -596,7 +596,7 @@ impl Session {
             rollout: Mutex::new(Some(rollout_recorder)),
             user_shell: default_shell,
             show_raw_agent_reasoning: config.show_raw_agent_reasoning,
-            auth_manager: Arc::clone(&auth_manager),
+            auth,
             otel_event_manager,
             tool_approvals: Mutex::new(ApprovalStore::default()),
         };
@@ -716,7 +716,7 @@ impl Session {
         };
 
         let mut turn_context: TurnContext = Self::make_turn_context(
-            Some(Arc::clone(&self.services.auth_manager)),
+            self.services.auth.clone(),
             &self.services.otel_event_manager,
             session_configuration.provider.clone(),
             &session_configuration,
@@ -808,12 +808,12 @@ impl Session {
     ) -> Option<SandboxCommandAssessment> {
         let config = turn_context.client.config();
         let provider = turn_context.client.provider().clone();
-        let auth_manager = Arc::clone(&self.services.auth_manager);
+        let auth = self.services.auth.clone();
         let otel = self.services.otel_event_manager.clone();
         crate::sandboxing::assessment::assess_command(
             config,
             provider,
-            auth_manager,
+            auth,
             &otel,
             self.conversation_id,
             turn_context.client.get_session_source(),
@@ -1652,7 +1652,7 @@ async fn spawn_review_thread(
     let base_instructions = REVIEW_PROMPT.to_string();
     let review_prompt = review_request.prompt.clone();
     let provider = parent_turn_context.client.get_provider();
-    let auth_manager = parent_turn_context.client.get_auth_manager();
+    let auth = parent_turn_context.client.get_auth();
     let model_family = review_model_family.clone();
 
     // Build per‑turn client with the requested model/family.
@@ -1676,7 +1676,7 @@ async fn spawn_review_thread(
     let per_turn_config = Arc::new(per_turn_config);
     let client = ModelClient::new(
         per_turn_config.clone(),
-        auth_manager,
+        auth,
         otel_event_manager,
         provider,
         per_turn_config.model_reasoning_effort,
@@ -2513,11 +2513,7 @@ mod tests {
         let config = Arc::new(config);
         let conversation_id = ConversationId::default();
         let otel_event_manager = otel_event_manager(conversation_id, config.as_ref());
-        let auth_manager = AuthManager::shared(
-            config.cwd.clone(),
-            false,
-            config.cli_auth_credentials_store_mode,
-        );
+        let auth = CodexAuth::from_env();
 
         let session_configuration = SessionConfiguration {
             provider: config.model_provider.clone(),
@@ -2545,13 +2541,13 @@ mod tests {
             rollout: Mutex::new(None),
             user_shell: shell::Shell::Unknown,
             show_raw_agent_reasoning: config.show_raw_agent_reasoning,
-            auth_manager: Arc::clone(&auth_manager),
+            auth: auth.clone(),
             otel_event_manager: otel_event_manager.clone(),
             tool_approvals: Mutex::new(ApprovalStore::default()),
         };
 
         let turn_context = Session::make_turn_context(
-            Some(Arc::clone(&auth_manager)),
+            auth,
             &otel_event_manager,
             session_configuration.provider.clone(),
             &session_configuration,
@@ -2589,11 +2585,7 @@ mod tests {
         let config = Arc::new(config);
         let conversation_id = ConversationId::default();
         let otel_event_manager = otel_event_manager(conversation_id, config.as_ref());
-        let auth_manager = AuthManager::shared(
-            config.cwd.clone(),
-            false,
-            config.cli_auth_credentials_store_mode,
-        );
+        let auth = CodexAuth::from_env();
 
         let session_configuration = SessionConfiguration {
             provider: config.model_provider.clone(),
@@ -2621,13 +2613,13 @@ mod tests {
             rollout: Mutex::new(None),
             user_shell: shell::Shell::Unknown,
             show_raw_agent_reasoning: config.show_raw_agent_reasoning,
-            auth_manager: Arc::clone(&auth_manager),
+            auth: auth.clone(),
             otel_event_manager: otel_event_manager.clone(),
             tool_approvals: Mutex::new(ApprovalStore::default()),
         };
 
         let turn_context = Arc::new(Session::make_turn_context(
-            Some(Arc::clone(&auth_manager)),
+            auth,
             &otel_event_manager,
             session_configuration.provider.clone(),
             &session_configuration,

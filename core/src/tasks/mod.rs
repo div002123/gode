@@ -16,7 +16,7 @@ use tokio_util::task::AbortOnDropHandle;
 use tracing::trace;
 use tracing::warn;
 
-use crate::AuthManager;
+use crate::CodexAuth;
 use crate::codex::Session;
 use crate::codex::TurnContext;
 use crate::protocol::EventMsg;
@@ -52,8 +52,8 @@ impl SessionTaskContext {
         Arc::clone(&self.session)
     }
 
-    pub(crate) fn auth_manager(&self) -> Arc<AuthManager> {
-        Arc::clone(&self.session.services.auth_manager)
+    pub(crate) fn auth(&self) -> Option<CodexAuth> {
+        self.session.services.auth.clone()
     }
 }
 

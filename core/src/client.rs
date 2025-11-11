@@ -28,7 +28,7 @@ use tracing::debug;
 use tracing::trace;
 use tracing::warn;
 
-use crate::AuthManager;
+use crate::CodexAuth;
 use crate::chat_completions::AggregateStreamExt;
 use crate::chat_completions::stream_chat_completions;
 use crate::client_common::Prompt;
@@ -78,7 +78,7 @@ struct Error {
 #[derive(Debug, Clone)]
 pub struct ModelClient {
     config: Arc<Config>,
-    auth_manager: Option<Arc<AuthManager>>,
+    auth: Option<CodexAuth>,
     otel_event_manager: OtelEventManager,
     client: CodexHttpClient,
     provider: ModelProviderInfo,
@@ -92,7 +92,7 @@ pub struct ModelClient {
 impl ModelClient {
     pub fn new(
         config: Arc<Config>,
-        auth_manager: Option<Arc<AuthManager>>,
+        auth: Option<CodexAuth>,
         otel_event_manager: OtelEventManager,
         provider: ModelProviderInfo,
         effort: Option<ReasoningEffortConfig>,
@@ -104,7 +104,7 @@ impl ModelClient {
 
         Self {
             config,
-            auth_manager,
+            auth,
             otel_event_manager,
             client,
             provider,
@@ -193,7 +193,7 @@ impl ModelClient {
             .await;
         }
 
-        let auth_manager = self.auth_manager.clone();
+        let auth = self.auth.clone();
 
         let full_instructions = prompt.get_full_instructions(&self.config.model_family);
         let tools_json = create_tools_json_for_responses_api(&prompt.tools)?;
@@ -258,7 +258,7 @@ impl ModelClient {
         let max_attempts = self.provider.request_max_retries();
         for attempt in 0..=max_attempts {
             match self
-                .attempt_stream_responses(attempt, &payload_json, &auth_manager)
+                .attempt_stream_responses(attempt, &payload_json, &auth)
                 .await
             {
                 Ok(stream) => {
@@ -285,10 +285,10 @@ impl ModelClient {
         &self,
         attempt: u64,
         payload_json: &Value,
-        auth_manager: &Option<Arc<AuthManager>>,
+        auth: &Option<CodexAuth>,
     ) -> std::result::Result<ResponseStream, StreamAttemptError> {
-        // Always fetch the latest auth in case a prior attempt refreshed the token.
-        let auth = auth_manager.as_ref().and_then(|m| m.auth());
+        // Use the provided auth directly.
+        let auth = auth.clone();
 
         trace!(
             "POST to {}: {:?}",
@@ -469,8 +469,8 @@ impl ModelClient {
         self.summary
     }
 
-    pub fn get_auth_manager(&self) -> Option<Arc<AuthManager>> {
-        self.auth_manager.clone()
+    pub fn get_auth(&self) -> Option<CodexAuth> {
+        self.auth.clone()
     }
 }
 

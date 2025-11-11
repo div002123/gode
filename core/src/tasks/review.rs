@@ -85,7 +85,7 @@ async fn start_review_conversation(
     sub_agent_config.base_instructions = Some(crate::REVIEW_PROMPT.to_string());
     (run_codex_conversation_one_shot(
         sub_agent_config,
-        session.auth_manager(),
+        session.auth(),
         input,
         session.clone_session(),
         ctx.clone(),

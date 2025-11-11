@@ -1,4 +1,3 @@
-use crate::AuthManager;
 use crate::CodexAuth;
 use crate::codex::Codex;
 use crate::codex::CodexSpawnOk;
@@ -34,44 +33,41 @@ pub struct NewConversation {
 /// maintaining them in memory.
 pub struct ConversationManager {
     conversations: Arc<RwLock<HashMap<ConversationId, Arc<CodexConversation>>>>,
-    auth_manager: Arc<AuthManager>,
+    auth: Option<CodexAuth>,
     session_source: SessionSource,
 }
 
 impl ConversationManager {
-    pub fn new(auth_manager: Arc<AuthManager>, session_source: SessionSource) -> Self {
+    pub fn new(auth: Option<CodexAuth>, session_source: SessionSource) -> Self {
         Self {
             conversations: Arc::new(RwLock::new(HashMap::new())),
-            auth_manager,
+            auth,
             session_source,
         }
     }
 
-    /// Construct with a dummy AuthManager containing the provided CodexAuth.
+    /// Construct with CodexAuth for testing.
     /// Used for integration tests: should not be used by ordinary business logic.
     pub fn with_auth(auth: CodexAuth) -> Self {
-        Self::new(
-            crate::AuthManager::from_auth_for_testing(auth),
-            SessionSource::Exec,
-        )
+        Self::new(Some(auth), SessionSource::Exec)
     }
 
     pub async fn new_conversation(&self, config: Config) -> CodexResult<NewConversation> {
-        self.spawn_conversation(config, self.auth_manager.clone())
+        self.spawn_conversation(config, self.auth.clone())
             .await
     }
 
     async fn spawn_conversation(
         &self,
         config: Config,
-        auth_manager: Arc<AuthManager>,
+        auth: Option<CodexAuth>,
     ) -> CodexResult<NewConversation> {
         let CodexSpawnOk {
             codex,
             conversation_id,
         } = Codex::spawn(
             config,
-            auth_manager,
+            auth,
             InitialHistory::New,
             self.session_source.clone(),
         )
@@ -129,10 +125,10 @@ impl ConversationManager {
         &self,
         config: Config,
         rollout_path: PathBuf,
-        auth_manager: Arc<AuthManager>,
+        auth: Option<CodexAuth>,
     ) -> CodexResult<NewConversation> {
         let initial_history = RolloutRecorder::get_rollout_history(&rollout_path).await?;
-        self.resume_conversation_with_history(config, initial_history, auth_manager)
+        self.resume_conversation_with_history(config, initial_history, auth)
             .await
     }
 
@@ -140,14 +136,14 @@ impl ConversationManager {
         &self,
         config: Config,
         initial_history: InitialHistory,
-        auth_manager: Arc<AuthManager>,
+        auth: Option<CodexAuth>,
     ) -> CodexResult<NewConversation> {
         let CodexSpawnOk {
             codex,
             conversation_id,
         } = Codex::spawn(
             config,
-            auth_manager,
+            auth,
             initial_history,
             self.session_source.clone(),
         )
@@ -181,11 +177,11 @@ impl ConversationManager {
         let history = truncate_before_nth_user_message(history, nth_user_message);
 
         // Spawn a new conversation with the computed initial history.
-        let auth_manager = self.auth_manager.clone();
+        let auth = self.auth.clone();
         let CodexSpawnOk {
             codex,
             conversation_id,
-        } = Codex::spawn(config, auth_manager, history, self.session_source.clone()).await?;
+        } = Codex::spawn(config, auth, history, self.session_source.clone()).await?;
 
         self.finalize_spawn(codex, conversation_id).await
     }

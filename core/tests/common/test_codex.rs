@@ -66,11 +66,9 @@ impl TestCodexBuilder {
 
         let new_conversation = match resume_from {
             Some(path) => {
-                let auth_manager = codex_core::AuthManager::from_auth_for_testing(
-                    CodexAuth::from_api_key("dummy"),
-                );
+                let auth = Some(CodexAuth::from_api_key("dummy"));
                 conversation_manager
-                    .resume_conversation_from_rollout(config, path, auth_manager)
+                    .resume_conversation_from_rollout(config, path, auth)
                     .await?
             }
             None => conversation_manager.new_conversation(config).await?,

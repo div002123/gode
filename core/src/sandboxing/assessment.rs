@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use std::time::Instant;
 
-use crate::AuthManager;
+use crate::CodexAuth;
 use crate::ModelProviderInfo;
 use crate::client::ModelClient;
 use crate::client_common::Prompt;
@@ -41,7 +41,7 @@ struct SandboxAssessmentPromptTemplate<'a> {
 pub(crate) async fn assess_command(
     config: Arc<Config>,
     provider: ModelProviderInfo,
-    auth_manager: Arc<AuthManager>,
+    auth: Option<CodexAuth>,
     parent_otel: &OtelEventManager,
     conversation_id: ConversationId,
     session_source: SessionSource,
@@ -127,7 +127,7 @@ pub(crate) async fn assess_command(
 
     let client = ModelClient::new(
         Arc::clone(&config),
-        Some(auth_manager),
+        auth,
         child_otel,
         provider,
         config.model_reasoning_effort,
