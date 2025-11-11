@@ -10,7 +10,7 @@
 flowchart TD
     Start[接收命令参数] --> DetectFormat{检测调用格式}
 
-    DetectFormat -->|"apply_patch <patch>"| DirectInvocation[直接调用]
+    DetectFormat -->|"apply_patch [patch]"| DirectInvocation[直接调用]
     DetectFormat -->|bash -lc heredoc| HeredocInvocation[Heredoc 调用]
     DetectFormat -->|其他| NotApplyPatch[非补丁命令]
 
