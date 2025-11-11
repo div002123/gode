@@ -1,260 +1,256 @@
-# Codex 项目文档
+# Codex 项目文档（除 core 外）
 
-欢迎查阅 Codex 项目的详细中文文档。本文档集覆盖了除 `core` 之外的所有 crate，全面介绍了各个组件的功能和使用方法。
+本目录包含除 `core` crate 之外所有代码文件的详细中文文档。
 
-## 📚 文档列表
+## 📚 文档组织
 
-### 协议和通信
+### 代码文件文档（按文件一一对应）
+每个 `.rs` 源文件都有对应的 `.md` 文档，说明：
+- 文件在整体中的作用
+- 主要结构体和枚举
+- 主要函数和方法
 
-1. **[app-server-protocol](./app-server-protocol.md)**
-   - JSON-RPC 协议定义
-   - 客户端-服务器通信接口
-   - TypeScript 类型导出
-
-2. **[protocol](./protocol.md)**
-   - 核心协议定义
-   - 提交-事件队列（SQ/EQ）
-   - 消息和事件类型
-
-3. **[mcp-types](./mcp-types.md)**
-   - Model Context Protocol 类型
-   - 自动生成的协议定义
-   - 请求-响应模式
-
-### 工具和功能
-
-4. **[apply-patch](./apply-patch.md)**
-   - 补丁应用工具
-   - Unified diff 解析
-   - 文件修改引擎
-
-5. **[file-search](./file-search.md)**
-   - 高性能文件搜索
-   - 模糊匹配算法
-   - 并行文件遍历
-
-### MCP 集成
-
-6. **[rmcp-client](./rmcp-client.md)**
-   - MCP 客户端实现
-   - 多种传输方式支持
-   - OAuth 认证集成
-
-### 安全和存储
-
-7. **[keyring-store](./keyring-store.md)**
-   - 跨平台凭据存储
-   - 系统 Keyring 集成
-   - OAuth 令牌管理
-
-8. **[windows-sandbox-rs](./windows-sandbox-rs.md)**
-   - Windows 沙箱实现
-   - 进程隔离和限制
-   - ACL 和令牌管理
-
-### 基础设施
-
-9. **[async-utils](./async-utils.md)**
-   - 异步工具集
-   - 可取消 Future
-   - CancellationToken 扩展
-
-10. **[otel](./otel.md)**
-    - OpenTelemetry 集成
-    - 可选遥测功能
-    - 性能追踪
-
-11. **[utils](./utils.md)**
-    - 通用工具库集合
-    - cache, git, image, pty
-    - readiness, string, tokenizer
-
-### 流程图和架构
-
-12. **[运行机制流程图](./运行机制流程图.md)**
-    - 10 张详细流程图
-    - 数据流和架构图
-    - 各组件交互流程
-
-## 🗂️ 按功能分类
-
-### 协议层
-- **app-server-protocol** - 应用协议
-- **protocol** - 核心协议
-- **mcp-types** - MCP 协议
-
-### 工具层
-- **apply-patch** - 补丁应用
-- **file-search** - 文件搜索
-
-### 集成层
-- **rmcp-client** - MCP 客户端
-- **otel** - 遥测集成
-
-### 基础设施层
-- **keyring-store** - 安全存储
-- **async-utils** - 异步工具
-- **utils/** - 通用工具
-- **windows-sandbox-rs** - 沙箱（Windows）
-
-## 🚀 快速导航
-
-### 我想了解...
-
-- **项目整体架构** → 查看 [运行机制流程图](./运行机制流程图.md#1-项目整体架构)
-- **协议定义** → 阅读 [protocol](./protocol.md) 和 [app-server-protocol](./app-server-protocol.md)
-- **如何修改文件** → 参考 [apply-patch](./apply-patch.md)
-- **如何搜索文件** → 浏览 [file-search](./file-search.md)
-- **MCP 集成** → 查看 [rmcp-client](./rmcp-client.md) 和 [mcp-types](./mcp-types.md)
-- **安全存储** → 参考 [keyring-store](./keyring-store.md)
-- **工具库** → 阅读 [utils](./utils.md)
-
-## 📊 Crate 关系图
-
-```
-┌─────────────────────────────────────────┐
-│        应用层 (CLI/Server/Desktop)       │
-└──────────────────┬──────────────────────┘
-                   │
-┌──────────────────▼──────────────────────┐
-│      app-server-protocol (JSON-RPC)     │
-└──────────────────┬──────────────────────┘
-                   │
-┌──────────────────▼──────────────────────┐
-│      protocol (核心协议 SQ/EQ)          │
-└──────────────────┬──────────────────────┘
-                   │
-┌──────────────────▼──────────────────────┐
-│          codex-core (核心引擎)          │
-└────┬────┬────┬────┬────┬────┬────┬─────┘
-     │    │    │    │    │    │    │
-     ▼    ▼    ▼    ▼    ▼    ▼    ▼
-  apply file rmcp otel key async utils
-  patch search client    ring utils
-                         store
-```
-
-## 🔍 核心概念
-
-### 协议模式
-
-#### SQ/EQ (Submission Queue / Event Queue)
-- **Submission**: 用户 → Codex
-- **Event**: Codex → 用户
-- 单向消息流，解耦通信
-
-#### JSON-RPC
-- 标准远程过程调用
-- TypeScript 类型安全
-- 易于集成
-
-### 工具系统
-
-#### 内置工具
-- **apply_patch**: 应用代码补丁
-- **file_search**: 搜索文件
-- **shell**: 执行命令
-
-#### MCP 工具
-- 动态加载外部工具
-- 支持子进程和 HTTP
-- OAuth 认证支持
-
-### 安全机制
-
-#### 凭据存储
-- 系统 Keyring 集成
-- 加密存储敏感数据
-- 跨平台支持
-
-#### 沙箱
-- Windows: ACL + 令牌限制
-- Linux: Landlock (在 core 中)
-- macOS: Seatbelt (在 core 中)
-
-## 📖 使用场景
-
-### 开发者集成
-
-```rust
-// 使用 file-search 查找文件
-use codex_file_search::run;
-let results = run("main", ".", vec![], 20, Some(4))?;
-
-// 应用补丁
-use codex_apply_patch::apply_patch;
-apply_patch(&action, &cwd)?;
-
-// 连接 MCP 服务器
-use codex_rmcp_client::*;
-let client = RmcpClient::new(transport);
-let connected = client.connect().await?;
-```
-
-### 客户端开发
-
-```typescript
-// 使用 app-server-protocol 类型
-import { NewConversationParams, InitializeParams } from './generated_types';
-
-const params: NewConversationParams = {
-  cwd: "/project",
-  model: "claude-3-5-sonnet-20241022",
-  // ...
-};
-```
-
-## 🛠️ 开发指南
-
-### 添加新的 MCP 工具
-参考 [rmcp-client](./rmcp-client.md) 了解如何连接自定义 MCP 服务器。
-
-### 扩展协议
-查看 [protocol](./protocol.md) 和 [app-server-protocol](./app-server-protocol.md) 了解协议扩展方式。
-
-### 贡献工具
-参考 [apply-patch](./apply-patch.md) 和 [file-search](./file-search.md) 了解工具实现模式。
-
-## 📝 文档约定
-
-### 结构
-每个 crate 文档包含：
-1. **文件在整体的作用** - 在项目中的角色
-2. **主要结构体** - 核心数据类型
-3. **主要函数/方法** - API 接口
-4. **使用示例** - 实际代码示例
-5. **依赖关系** - 与其他 crate 的关系
-
-### 代码示例
-- 使用真实的 Rust 代码
-- 包含错误处理
-- 展示典型用法
-
-### 流程图
-- 使用 Mermaid 格式
-- 清晰的节点标注
-- 完整的流程覆盖
-
-## 🤝 贡献
-
-欢迎改进文档！贡献方式：
-- 修正错误和不准确之处
-- 补充更多使用示例
-- 添加新的流程图
-- 改进现有说明
-
-## 📄 许可
-
-本文档随 Codex 项目一起发布，遵循项目的许可协议。
+### 流程图文档
+每个 crate 都有对应的运行机制流程图，使用 Mermaid 绘制。
 
 ---
 
-**最后更新**: 2025-11-11
-**文档版本**: 1.0
-**覆盖范围**: 除 core 之外的所有 crate
+## 🗂️ 文档索引
 
-## 🔗 相关链接
+### app-server-protocol (8 个文件)
 
-- **Core 文档**: 核心引擎文档（单独维护）
-- **API 文档**: 运行 `cargo doc --open` 查看 Rustdoc
-- **项目主页**: GitHub 仓库
+**代码文档：**
+- [export.rs](./app-server-protocol-src-export.md) - 类型导出工具
+- [jsonrpc_lite.rs](./app-server-protocol-src-jsonrpc_lite.md) - JSON-RPC 轻量实现
+- [lib.rs](./app-server-protocol-src-lib.md) - 库入口
+- [protocol/common.rs](./app-server-protocol-src-protocol-common.md) - 公共协议类型
+- [protocol/mod.rs](./app-server-protocol-src-protocol-mod.md) - 协议模块
+- [protocol/v1.rs](./app-server-protocol-src-protocol-v1.md) - V1 协议定义
+- [protocol/v2.rs](./app-server-protocol-src-protocol-v2.md) - V2 协议定义
+
+**流程图：**
+- [app-server-protocol 流程图](./app-server-protocol-流程图.md)
+
+---
+
+### apply-patch (5 个文件)
+
+**代码文档：**
+- [lib.rs](./apply-patch-src-lib.md) - 补丁应用核心逻辑
+- [main.rs](./apply-patch-src-main.md) - CLI 入口
+- [parser.rs](./apply-patch-src-parser.md) - 补丁解析器
+- [seek_sequence.rs](./apply-patch-src-seek_sequence.md) - 序列查找
+- [standalone_executable.rs](./apply-patch-src-standalone_executable.md) - 独立可执行文件
+
+**流程图：**
+- [apply-patch 流程图](./apply-patch-流程图.md)
+
+---
+
+### async-utils (1 个文件)
+
+**代码文档：**
+- [lib.rs](./async-utils-src-lib.md) - 异步工具（可取消 Future）
+
+**流程图：**
+- [async-utils 流程图](./async-utils-流程图.md)
+
+---
+
+### file-search (3 个文件)
+
+**代码文档：**
+- [cli.rs](./file-search-src-cli.md) - CLI 参数定义
+- [lib.rs](./file-search-src-lib.md) - 文件搜索核心
+- [main.rs](./file-search-src-main.md) - 主入口
+
+**流程图：**
+- [file-search 流程图](./file-search-流程图.md)
+
+---
+
+### keyring-store (1 个文件)
+
+**代码文档：**
+- [lib.rs](./keyring-store-src-lib.md) - 跨平台凭据存储
+
+**流程图：**
+- [keyring-store 流程图](./keyring-store-流程图.md)
+
+---
+
+### mcp-types (1 个文件)
+
+**代码文档：**
+- [lib.rs](./mcp-types-src-lib.md) - MCP 协议类型定义（自动生成）
+
+**流程图：**
+- [mcp-types 流程图](./mcp-types-流程图.md)
+
+---
+
+### otel (4 个文件)
+
+**代码文档：**
+- [config.rs](./otel-src-config.md) - 配置类型
+- [lib.rs](./otel-src-lib.md) - 库入口
+- [otel_event_manager.rs](./otel-src-otel_event_manager.md) - 事件管理器
+- [otel_provider.rs](./otel-src-otel_provider.md) - OpenTelemetry 提供者
+
+**流程图：**
+- [otel 流程图](./otel-流程图.md)
+
+---
+
+### protocol (14 个文件)
+
+**代码文档：**
+- [account.rs](./protocol-src-account.md) - 账户相关类型
+- [approvals.rs](./protocol-src-approvals.md) - 审批类型
+- [config_types.rs](./protocol-src-config_types.md) - 配置类型
+- [conversation_id.rs](./protocol-src-conversation_id.md) - 对话 ID
+- [custom_prompts.rs](./protocol-src-custom_prompts.md) - 自定义提示
+- [items.rs](./protocol-src-items.md) - 项目类型
+- [lib.rs](./protocol-src-lib.md) - 库入口
+- [message_history.rs](./protocol-src-message_history.md) - 消息历史
+- [models.rs](./protocol-src-models.md) - 模型相关
+- [num_format.rs](./protocol-src-num_format.md) - 数字格式化
+- [parse_command.rs](./protocol-src-parse_command.md) - 命令解析
+- [plan_tool.rs](./protocol-src-plan_tool.md) - 计划工具
+- [protocol.rs](./protocol-src-protocol.md) - 核心协议定义
+- [user_input.rs](./protocol-src-user_input.md) - 用户输入
+
+**流程图：**
+- [protocol 流程图](./protocol-流程图.md)
+
+---
+
+### rmcp-client (8 个文件)
+
+**代码文档：**
+- [auth_status.rs](./rmcp-client-src-auth_status.md) - 认证状态
+- [find_codex_home.rs](./rmcp-client-src-find_codex_home.md) - 配置目录查找
+- [lib.rs](./rmcp-client-src-lib.md) - 库入口
+- [logging_client_handler.rs](./rmcp-client-src-logging_client_handler.md) - 日志处理器
+- [oauth.rs](./rmcp-client-src-oauth.md) - OAuth 令牌管理
+- [perform_oauth_login.rs](./rmcp-client-src-perform_oauth_login.md) - OAuth 登录流程
+- [rmcp_client.rs](./rmcp-client-src-rmcp_client.md) - MCP 客户端核心
+- [utils.rs](./rmcp-client-src-utils.md) - 工具函数
+
+**流程图：**
+- [rmcp-client 流程图](./rmcp-client-流程图.md)
+
+---
+
+### windows-sandbox-rs (11 个文件)
+
+**代码文档：**
+- [acl.rs](./windows-sandbox-rs-src-acl.md) - ACL 管理
+- [allow.rs](./windows-sandbox-rs-src-allow.md) - 允许路径
+- [audit.rs](./windows-sandbox-rs-src-audit.md) - 审计日志
+- [cap.rs](./windows-sandbox-rs-src-cap.md) - 能力管理
+- [env.rs](./windows-sandbox-rs-src-env.md) - 环境变量
+- [lib.rs](./windows-sandbox-rs-src-lib.md) - 库入口
+- [logging.rs](./windows-sandbox-rs-src-logging.md) - 日志记录
+- [policy.rs](./windows-sandbox-rs-src-policy.md) - 沙箱策略
+- [process.rs](./windows-sandbox-rs-src-process.md) - 进程管理
+- [token.rs](./windows-sandbox-rs-src-token.md) - 令牌处理
+- [winutil.rs](./windows-sandbox-rs-src-winutil.md) - Windows 工具
+
+**流程图：**
+- [windows-sandbox-rs 流程图](./windows-sandbox-rs-流程图.md)
+
+---
+
+## 📊 统计
+
+- **总文档数**：65 个
+  - 代码文件文档：54 个
+  - 流程图文档：10 个
+  - 索引文档：1 个（流程图索引）
+
+## 🔍 快速查找
+
+### 按功能分类
+
+#### 协议和通信
+- app-server-protocol - 客户端服务器协议
+- protocol - 核心协议定义
+- mcp-types - MCP 协议类型
+
+#### 工具
+- apply-patch - 补丁应用
+- file-search - 文件搜索
+
+#### MCP 集成
+- rmcp-client - MCP 客户端
+
+#### 基础设施
+- keyring-store - 凭据存储
+- async-utils - 异步工具
+- otel - 遥测
+
+#### 平台特定
+- windows-sandbox-rs - Windows 沙箱
+
+## 📖 使用说明
+
+### 查看代码文档
+每个源文件都有对应的文档，文件名格式：
+```
+{crate-name}-src-{path}.md
+```
+
+例如：
+- `apply-patch/src/lib.rs` → `apply-patch-src-lib.md`
+- `protocol/src/protocol.rs` → `protocol-src-protocol.md`
+
+### 查看流程图
+每个 crate 都有运行机制流程图：
+```
+{crate-name}-流程图.md
+```
+
+流程图使用 Mermaid 绘制，在 GitHub 上可以直接查看，或使用支持 Mermaid 的 Markdown 查看器。
+
+### 流程图索引
+查看 [流程图索引](./流程图索引.md) 了解所有流程图的概述。
+
+## 🛠️ 文档特点
+
+- ✅ **中文编写**：所有文档使用中文
+- ✅ **一对一映射**：每个代码文件对应一个文档
+- ✅ **简洁明了**：重点突出，易于理解
+- ✅ **结构清晰**：统一的文档结构
+- ✅ **可视化**：包含流程图和关系图
+
+## 📝 文档内容
+
+每个代码文档包含：
+1. **文件作用**：在整体项目中的角色
+2. **主要结构体**：公共数据结构
+3. **主要函数**：公共 API 和方法
+
+每个流程图文档包含：
+1. **主要流程**：核心运行机制
+2. **数据流**：数据在组件间的流动
+3. **状态转换**：关键状态变化
+4. **特殊说明**：性能、安全等注意事项
+
+## 🤝 贡献
+
+欢迎改进文档：
+- 修正错误
+- 补充细节
+- 添加示例
+- 改进流程图
+
+## 📄 许可
+
+本文档随 Codex 项目发布。
+
+---
+
+**最后更新**：2025-11-11
+**文档版本**：1.0
+**覆盖范围**：除 core 外所有 crate
