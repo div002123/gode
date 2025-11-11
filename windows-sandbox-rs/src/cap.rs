@@ -14,7 +14,7 @@ pub struct CapSids {
 }
 
 pub fn cap_sid_file(policy_cwd: &Path) -> PathBuf {
-    policy_cwd.join(".codex").join("cap_sid")
+    policy_cwd.join(".freecode").join("cap_sid")
 }
 
 fn make_random_cap_sid_string() -> String {
