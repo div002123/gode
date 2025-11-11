@@ -195,7 +195,7 @@ flowchart TD
     CheckEmpty -->|否| SeekOldLines[查找旧行匹配]
 
     PureAddition --> DetermineInsertPoint[确定插入点]
-    DetermineInsertPoint --> AddReplacement[添加替换 (idx, 0, new_lines)]
+    DetermineInsertPoint --> AddReplacement["添加替换 (idx, 0, new_lines)"]
     AddReplacement --> ChunkLoop
 
     SeekOldLines --> MatchFound{找到匹配?}

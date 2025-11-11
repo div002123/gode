@@ -21,7 +21,7 @@ flowchart TD
     CheckResult -->|NoEntry 错误| LogNoEntry[记录无条目日志]
     CheckResult -->|其他错误| LogError[记录错误日志]
 
-    LogSuccess --> ReturnSome[返回 Some(password)]
+    LogSuccess --> ReturnSome["返回 Some(password)"]
     LogNoEntry --> ReturnNone[返回 None]
     LogError --> ReturnError
 
@@ -46,7 +46,7 @@ flowchart TD
     CheckResult -->|成功| LogSuccess[记录成功日志]
     CheckResult -->|失败| LogError[记录错误日志]
 
-    LogSuccess --> ReturnOk[返回 Ok(())]
+    LogSuccess --> ReturnOk["返回 Ok(())"]
     LogError --> ReturnError[返回错误]
 
     ReturnOk --> End[结束]
@@ -70,8 +70,8 @@ flowchart TD
     CheckResult -->|NoEntry 错误| LogNoEntry[记录无条目日志]
     CheckResult -->|其他错误| LogError[记录错误日志]
 
-    LogSuccess --> ReturnTrue[返回 Ok(true)]
-    LogNoEntry --> ReturnFalse[返回 Ok(false)]
+    LogSuccess --> ReturnTrue["返回 Ok(true)"]
+    LogNoEntry --> ReturnFalse["返回 Ok(false)"]
     LogError --> ReturnError[返回错误]
 
     ReturnTrue --> End[结束]
@@ -149,7 +149,7 @@ flowchart TD
 
     HandleNoEntry --> CheckOperation{检查操作类型}
     CheckOperation -->|Load| ReturnNone[返回 None]
-    CheckOperation -->|Delete| ReturnFalse[返回 Ok(false)]
+    CheckOperation -->|Delete| ReturnFalse["返回 Ok(false)"]
 
     WrapError --> AddContext[添加上下文信息]
     AddContext --> ReturnError[返回错误]

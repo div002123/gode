@@ -15,9 +15,9 @@ flowchart TD
     RaceCondition -->|取消令牌触发| CancelBranch[取消分支执行]
     RaceCondition -->|Future 完成| FutureBranch[Future 分支执行]
 
-    CancelBranch --> ReturnCancelErr[返回 Err(CancelErr::Cancelled)]
+    CancelBranch --> ReturnCancelErr["返回 Err(CancelErr::Cancelled)"]
     FutureBranch --> WrapResult[包装 Future 结果]
-    WrapResult --> ReturnOk[返回 Ok(future_output)]
+    WrapResult --> ReturnOk["返回 Ok(future_output)"]
 
     ReturnCancelErr --> End[结束]
     ReturnOk --> End
@@ -64,7 +64,7 @@ flowchart TD
     WrapWithOrCancel --> Execute[执行异步操作]
 
     Execute --> UserInteraction{用户取消操作?}
-    UserInteraction -->|是| CallCancel[调用 token.cancel()]
+    UserInteraction -->|是| CallCancel["调用 token.cancel()"]
     UserInteraction -->|否| WaitCompletion[等待任务完成]
 
     CallCancel --> PropagateCancel[传播取消信号]
