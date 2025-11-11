@@ -8,7 +8,7 @@
 
 ```mermaid
 flowchart TD
-    Start[调用 future.or_cancel(&token)] --> SetupSelect[设置 tokio::select!]
+    Start["调用 future.or_cancel(token)"] --> SetupSelect["设置 tokio::select!"]
 
     SetupSelect --> RaceCondition{竞争条件}
 
@@ -34,7 +34,7 @@ sequenceDiagram
 
     Caller->>Token: 创建取消令牌
     Caller->>Future: 启动异步任务
-    Caller->>Select: future.or_cancel(&token)
+    Caller->>Select: future.or_cancel(token)
 
     par 并行等待
         Select->>Token: 等待 token.cancelled()
@@ -97,7 +97,9 @@ flowchart TD
     Wrap2 --> Execute2[执行任务 2]
     Wrap3 --> Execute3[执行任务 3]
 
-    Execute1 & Execute2 & Execute3 --> CancelTrigger{父级令牌取消?}
+    Execute1 --> CancelTrigger{父级令牌取消?}
+    Execute2 --> CancelTrigger
+    Execute3 --> CancelTrigger
 
     CancelTrigger -->|是| CancelAll[所有子任务收到取消信号]
     CancelTrigger -->|否| WaitAll[等待所有任务完成]
@@ -127,7 +129,7 @@ flowchart LR
         Token[CancellationToken]
     end
 
-    AsyncFn -->|.or_cancel(&token)| OrCancelExt
+    AsyncFn -->|".or_cancel(token)"| OrCancelExt
     OrCancelExt -->|实现| Select
     CancelHandler -->|.cancel()| Token
     Token -->|cancelled()| Select
